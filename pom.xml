@@ -25,6 +25,7 @@
     <hbase.deps.scope>compile</hbase.deps.scope>
     <spark.deps.scope>compile</spark.deps.scope>
     <hive.deps.scope>compile</hive.deps.scope>
+    <exclude.files>1</exclude.files>
   </properties>
   <repositories>
     <repository>
@@ -204,6 +205,7 @@
                 <hadoop.deps.scope>provided</hadoop.deps.scope>
                 <hbase.deps.scope>provided</hbase.deps.scope>
                 <hive.deps.scope>provided</hive.deps.scope>
+                <exclude.files>*.xml</exclude.files>
             </properties>
         </profile>
         <profile>
@@ -213,6 +215,7 @@
                 <hadoop.deps.scope>provided</hadoop.deps.scope>
                 <hbase.deps.scope>provided</hbase.deps.scope>
                 <hive.deps.scope>provided</hive.deps.scope>
+                <exclude.files>*.xml</exclude.files>
             </properties>
         </profile>
     </profiles>
@@ -222,10 +225,7 @@
           <resource>
               <directory>${basedir}/src/main/resources</directory>
               <excludes>
-                  <exclude>hive-site.xml</exclude>
-                  <exclude>core-site.xml</exclude>
-                  <exclude>hdfs-site.xml</exclude>
-                  <exclude>hbase-site.xml</exclude>
+                  <exclude>${exclude.files}</exclude>
               </excludes>
           </resource>
       </resources>
