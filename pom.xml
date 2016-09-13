@@ -25,7 +25,7 @@
     <hbase.deps.scope>compile</hbase.deps.scope>
     <spark.deps.scope>compile</spark.deps.scope>
     <hive.deps.scope>compile</hive.deps.scope>
-    <exclude.files>1</exclude.files>
+    <exclude.files></exclude.files>
   </properties>
   <repositories>
     <repository>
@@ -197,6 +197,9 @@
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
+            <properties>
+                <exclude.files></exclude.files>
+            </properties>
         </profile>
         <profile>
             <id>stg</id>
