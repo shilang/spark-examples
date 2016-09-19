@@ -35,4 +35,5 @@ class SparkEntry extends Logging{
   logInfo("Debug string: " + conf.toDebugString)
   val spark = SparkSession.builder.config(conf).enableHiveSupport().getOrCreate()
   val sc = spark.sparkContext
+  import spark.implicits._
 }
