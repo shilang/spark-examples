@@ -101,7 +101,9 @@ object YhdCreateWorklog extends SparkEntry {
           "&adjustEstimate=auto&comment=&commentLevel=&" +
           "atl_token=BJOO-3RWZ-LXVM-C1H0%7C5593a547967feee6dca33785900857ca90f8b54a%7Clin"
       )
-      logWarning(worklog !!)
+      if (l._2.toString.toDouble > 0.0) {
+        logWarning(worklog !!)
+      }
     }
   }
 
