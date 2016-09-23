@@ -24,7 +24,7 @@ import org.apache.spark.sql.SparkSession
 /**
  * Spark application entry
  */
-class SparkEntry extends Logging{
+class SparkEntry extends Logging {
 
   Logger.getLogger("org.apache.spark").setLevel(Level.WARN)
 
@@ -35,5 +35,4 @@ class SparkEntry extends Logging{
   logInfo("Debug string: " + conf.toDebugString)
   val spark = SparkSession.builder.config(conf).enableHiveSupport().getOrCreate()
   val sc = spark.sparkContext
-  import spark.implicits._
 }

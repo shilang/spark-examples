@@ -22,8 +22,7 @@ import java.util
 import java.util.{Calendar, GregorianCalendar}
 
 import com.yhd.spark.common.SparkEntry
-import org.codehaus.jackson.JsonNode
-import org.codehaus.jackson.map.ObjectMapper
+import org.jsoup.Jsoup
 
 import scala.sys.process._
 import scala.util.Random
@@ -34,30 +33,29 @@ import scala.util.Random
 object YhdCreateWorklog extends SparkEntry {
   def main(args: Array[String])  {
 
-    if (args.size != 5) {
-      logError("Required 5 args: userName, workListUrl, cookie, date and hours")
+    if (args.size != 4) {
+      logError("Required 4 args: userName, cookie, date and hours")
       System.exit(0)
     }
 
     val userName = args(0)
-    val workListUrl = args(1)
-    val cookie = args(2)
-    val date = args(3)
-    val hours = args(4)
+    val cookie = args(1)
+    val date = args(2)
+    val hours = args(3)
 
     if (!isWeekday(date)) {
-      logWarning(date + " is not Weekday.")
+      logWarning(date + " is not weekday.")
       System.exit(0)
     }
 
     val workList = Seq("curl",
-      workListUrl,
-      "-X", "GET",
+      "http://trident.yihaodian.com.cn/rest/issueNav/1/issueTable/?jql=resolution+%3D+Unresolved+" +
+        "AND+status+%3D+%22In+Progress%22+AND+assignee+in+(" + userName + ")+ORDER+BY+" +
+        "updatedDate+DESC&useUserColumns=true&filterId=-1&_=1474594507618",
       "-H", "Host: trident.yihaodian.com.cn",
       "-H", "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:45.0) Gecko/20100101 Firefox/45.0",
       "-H", "Accept: application/json, text/javascript, */*; q=0.01",
       "-H", "Accept-Language: en-US,en;q=0.8,zh-CN;q=0.5,zh;q=0.3",
-      "-H", "Content-Type: application/json",
       "-H", "X-AUSERNAME: " + userName,
       "-H", "X-Requested-With: XMLHttpRequest",
       "-H", "Referer: http://trident.yihaodian.com.cn",
@@ -66,21 +64,18 @@ object YhdCreateWorklog extends SparkEntry {
       "-H", "X-Atlassian-GreenHopper-Gadget: false"
     )
 
-    val workListJson = workList !!
+    val workListHtml = workList !!
 
-    val mapper = new ObjectMapper()
-    val root = mapper.readValue[JsonNode](workListJson, classOf[JsonNode])
-    logInfo(workListJson)
+    val issuerows = Jsoup.parse(workListHtml.replace("\\n", "").replace("\\\"", "\""))
+      .getElementsByClass("issuerow")
+    logWarning("issuerows: " + issuerows.size())
+    var issueIds = List[Long]()
+    for (i <- 0 until issuerows.size()) {
+      val issueId = issuerows.get(i).children().parents().attr("rel")
+      issueIds = issueIds.:+(issueId.toLong)
+    }
 
-    val issues = sc.parallelize(Seq(root.get("issuesData").get("issues").toString))
-
-    val sparkIssues = spark.read.json(issues)
-    logInfo("issues count: " + sparkIssues.count())
-    import spark.implicits._
-    val ids = sparkIssues.where($"statusName" === "In Progress").select("id")
-    val runningIds = ids.collect().map(_.getLong(0)).mkString(",")
-
-    val taskHours = getTaskHours(ids.collect().map(_.getLong(0)), hours.toDouble)
+    val taskHours = getTaskHours(issueIds, hours.toDouble)
     taskHours.foreach{ l =>
       logWarning(l._1 + ": " + l._2)
       val worklog = Seq("curl",
@@ -118,26 +113,12 @@ object YhdCreateWorklog extends SparkEntry {
 
   def getIndividualHours(taskHours: util.ArrayList[Double], manHours: ManHours):
   util.ArrayList[Double] = {
-   if (manHours.numTask == 0) {
-     taskHours
-   } else {
-     var individualHours : Double = 0.0
-     if (manHours.numTask == 1) {
-       manHours.numTask = manHours.numTask - 1
-       individualHours = manHours.hours.doubleValue()
-     } else {
-       val random = new Random()
-       val min: Double = 0.0
-       val max: Double = manHours.hours.doubleValue() / manHours.numTask * 2
-       individualHours = random.nextDouble() * max
-       individualHours = if (individualHours < min) min else individualHours
-       individualHours = Math.floor(individualHours * 10) / 10
-       manHours.numTask = manHours.numTask - 1
-       manHours.hours = manHours.hours - individualHours
-     }
-     taskHours.add(individualHours)
-     getIndividualHours(taskHours, manHours)
-   }
+    for (i <- 0 until manHours.numTask.toInt) {
+      taskHours.add(0.0)
+    }
+    val index = Random.nextInt(manHours.numTask.toInt)
+    taskHours.set(index.toInt, manHours.hours.doubleValue())
+    taskHours
   }
 
   def isWeekday(dateStr: String): Boolean = {
@@ -170,10 +151,9 @@ object YhdCreateWorklog extends SparkEntry {
     val year = date(0) - 2000
     val month = chineseMonth(date(1))
     val day = date(2)
-    val random = Random
 
     // 20/九月/16 06:18 下午
-    val tridentDate = day + "/" + month + "/" + year + " 06:" + (10 + random.nextInt(49)) + " 下午"
+    val tridentDate = day + "/" + month + "/" + year + " 06:" + (10 + Random.nextInt(49)) + " 下午"
     logWarning("tridentDate: " + tridentDate)
     URLEncoder.encode(tridentDate, "UTF-8")
   }
