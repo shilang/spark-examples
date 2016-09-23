@@ -33,15 +33,16 @@ import scala.util.Random
 object YhdCreateWorklog extends SparkEntry {
   def main(args: Array[String])  {
 
-    if (args.size != 4) {
-      logError("Required 4 args: userName, cookie, date and hours")
+    if (args.size < 4) {
+      logError("Required at least 4 args: userName, cookie, date, hours or TridentID")
       System.exit(0)
     }
 
-    val userName = args(0)
+    val userName: String = args(0)
     val cookie = args(1)
     val date = args(2)
     val hours = args(3)
+    val tridentID: String = if (args.size == 5) args(4) else ""
 
     if (!isWeekday(date)) {
       logWarning(date + " is not weekday.")
@@ -49,33 +50,40 @@ object YhdCreateWorklog extends SparkEntry {
     }
 
     val workList = Seq("curl",
-      "http://trident.yihaodian.com.cn/rest/issueNav/1/issueTable/?jql=resolution+%3D+Unresolved+" +
-        "AND+status+%3D+%22In+Progress%22+AND+assignee+in+(" + userName + ")+ORDER+BY+" +
-        "updatedDate+DESC&useUserColumns=true&filterId=-1&_=1474594507618",
+      "http://trident.yihaodian.com.cn/rest/issueNav/1/issueTable/?jql=issuetype+in+" +
+        "subTaskIssueTypes()+AND+resolution+%3D+Unresolved+AND+status+%3D+%22In+Progress%22+AND+" +
+        "assignee+in+(" + userName + ")+ORDER+BY+updatedDate+DESC" +
+        "&useUserColumns=true&filterId=-1&_=1474624648848",
       "-H", "Host: trident.yihaodian.com.cn",
       "-H", "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:45.0) Gecko/20100101 Firefox/45.0",
-      "-H", "Accept: application/json, text/javascript, */*; q=0.01",
+      "-H", "Accept: */*",
       "-H", "Accept-Language: en-US,en;q=0.8,zh-CN;q=0.5,zh;q=0.3",
       "-H", "X-AUSERNAME: " + userName,
       "-H", "X-Requested-With: XMLHttpRequest",
       "-H", "Referer: http://trident.yihaodian.com.cn",
       "-H", "Cookie: " + cookie,
-      "-H", "Connection: keep-alive",
-      "-H", "X-Atlassian-GreenHopper-Gadget: false"
+      "-H", "Connection: keep-alive"
     )
 
     val workListHtml = workList !!
 
-    val issuerows = Jsoup.parse(workListHtml.replace("\\n", "").replace("\\\"", "\""))
+    val issueRows = Jsoup.parse(workListHtml.replace("\\n", "").replace("\\\"", "\""))
       .getElementsByClass("issuerow")
-    logWarning("issuerows: " + issuerows.size())
-    var issueIds = List[Long]()
-    for (i <- 0 until issuerows.size()) {
-      val issueId = issuerows.get(i).children().parents().attr("rel")
-      issueIds = issueIds.:+(issueId.toLong)
+    logWarning("issueRows: " + issueRows.size())
+    var issueIds = Map[String, Long]()
+    for (i <- 0 until issueRows.size()) {
+      val parent = issueRows.get(i).children().parents()
+      val tridentId = parent.attr("data-issuekey")
+      val issueId = parent.attr("rel").toLong
+      issueIds = issueIds + (tridentId -> issueId)
     }
 
-    val taskHours = getTaskHours(issueIds, hours.toDouble)
+    val taskHours = if (tridentID.isEmpty) {
+      getTaskHours(issueIds.values.toSeq, hours.toDouble)
+    } else {
+      getTaskHours(issueIds.get(tridentID).toSeq, hours.toDouble)
+    }
+
     taskHours.foreach{ l =>
       logWarning(l._1 + ": " + l._2)
       val worklog = Seq("curl",
