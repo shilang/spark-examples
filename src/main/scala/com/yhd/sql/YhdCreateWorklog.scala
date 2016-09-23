@@ -161,7 +161,7 @@ object YhdCreateWorklog extends SparkEntry {
     val day = date(2)
 
     // 20/九月/16 06:18 下午
-    val tridentDate = day + "/" + month + "/" + year + " 06:" + (10 + Random.nextInt(49)) + " 下午"
+    val tridentDate = day + "/" + month + "/" + year + " 09:00 上午"
     logWarning("tridentDate: " + tridentDate)
     URLEncoder.encode(tridentDate, "UTF-8")
   }
