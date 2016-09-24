@@ -33,7 +33,7 @@ import scala.util.Random
 object YhdCreateWorklog extends SparkEntry {
   def main(args: Array[String])  {
 
-    if (args.size < 4) {
+    if (args.length < 4) {
       logError("Required at least 4 args: userName, cookie, date, hours or TridentID")
       System.exit(0)
     }
@@ -42,7 +42,7 @@ object YhdCreateWorklog extends SparkEntry {
     val cookie = args(1)
     val date = args(2)
     val hours = args(3)
-    val tridentID: String = if (args.size == 5) args(4) else ""
+    val tridentID: String = if (args.length == 5) args(4) else ""
 
     if (!isWeekday(date)) {
       logWarning(date + " is not weekday.")
@@ -69,7 +69,9 @@ object YhdCreateWorklog extends SparkEntry {
 
     val issueRows = Jsoup.parse(workListHtml.replace("\\n", "").replace("\\\"", "\""))
       .getElementsByClass("issuerow")
-    logWarning("issueRows: " + issueRows.size())
+    if (issueRows.size() == 0) {
+      logWarning("Please check your cookie.")
+    }
     var issueIds = Map[String, Long]()
     for (i <- 0 until issueRows.size()) {
       val parent = issueRows.get(i).children().parents()
@@ -78,10 +80,10 @@ object YhdCreateWorklog extends SparkEntry {
       issueIds = issueIds + (tridentId -> issueId)
     }
 
-    val taskHours = if (tridentID.isEmpty) {
-      getTaskHours(issueIds.values.toSeq, hours.toDouble)
-    } else {
+    val taskHours = if (!tridentID.isEmpty && issueIds.get(tridentID).isDefined) {
       getTaskHours(issueIds.get(tridentID).toSeq, hours.toDouble)
+    } else {
+      getTaskHours(issueIds.values.toSeq, hours.toDouble)
     }
 
     taskHours.foreach{ l =>
