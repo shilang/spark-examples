@@ -20,7 +20,7 @@
   </property>
   <property>
     <name>dfs.ha.namenodes.nameservice1</name>
-    <value>namenode1988,namenode1919</value>
+    <value>namenode1988,namenode2159</value>
   </property>
   <property>
     <name>dfs.namenode.rpc-address.nameservice1.namenode1988</name>
@@ -39,20 +39,20 @@
     <value>heju02:50470</value>
   </property>
   <property>
-    <name>dfs.namenode.rpc-address.nameservice1.namenode1919</name>
-    <value>wangyuming02:8020</value>
+    <name>dfs.namenode.rpc-address.nameservice1.namenode2159</name>
+    <value>zhangqihui:8020</value>
   </property>
   <property>
-    <name>dfs.namenode.servicerpc-address.nameservice1.namenode1919</name>
-    <value>wangyuming02:8022</value>
+    <name>dfs.namenode.servicerpc-address.nameservice1.namenode2159</name>
+    <value>zhangqihui:8022</value>
   </property>
   <property>
-    <name>dfs.namenode.http-address.nameservice1.namenode1919</name>
-    <value>wangyuming02:50070</value>
+    <name>dfs.namenode.http-address.nameservice1.namenode2159</name>
+    <value>zhangqihui:50070</value>
   </property>
   <property>
-    <name>dfs.namenode.https-address.nameservice1.namenode1919</name>
-    <value>wangyuming02:50470</value>
+    <name>dfs.namenode.https-address.nameservice1.namenode2159</name>
+    <value>zhangqihui:50470</value>
   </property>
   <property>
     <name>dfs.replication</name>
