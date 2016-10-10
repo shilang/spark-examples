@@ -67,6 +67,8 @@ object YhdCreateWorklog extends SparkEntry {
 
     val workListHtml = workList !!
 
+    logInfo(workListHtml)
+
     val issueRows = Jsoup.parse(workListHtml.replace("\\n", "").replace("\\\"", "\""))
       .getElementsByClass("issuerow")
     if (issueRows.size() == 0) {

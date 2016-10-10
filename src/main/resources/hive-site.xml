@@ -19,14 +19,6 @@
     <value>true</value>
   </property>
   <property>
-    <name>hive.enable.spark.execution.engine</name>
-    <value>false</value>
-  </property>
-  <property>
-    <name>hive.conf.restricted.list</name>
-    <value>hive.enable.spark.execution.engine</value>
-  </property>
-  <property>
     <name>hive.auto.convert.join</name>
     <value>true</value>
   </property>
