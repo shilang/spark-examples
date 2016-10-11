@@ -104,5 +104,7 @@ object RegressorExample extends SparkEntry{
 
     val treeModel = model.stages(1).asInstanceOf[DecisionTreeRegressionModel]
     logInfo("Learned regression tree model:\n" + treeModel.toDebugString)
+
+    spark.stop()
   }
 }
