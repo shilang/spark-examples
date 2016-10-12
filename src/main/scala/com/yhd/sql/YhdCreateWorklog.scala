@@ -136,10 +136,11 @@ object YhdCreateWorklog extends SparkEntry {
   def isWeekday(dateStr: String): Boolean = {
     var isWeekday = false
     val date = dateStr.split("-").map(_.toInt)
-    val calendar = new GregorianCalendar(date(0), date(1), date(2))
+    val calendar = new GregorianCalendar(date(0), date(1) - 1, date(2))
     val month = calendar.get(Calendar.MONTH)
     val dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH)
     val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK)
+    logWarning("dayOfWeek: " + dayOfWeek)
     if (month == 10) {
       if (dayOfMonth <= 7) {
         isWeekday = false
@@ -147,7 +148,7 @@ object YhdCreateWorklog extends SparkEntry {
         isWeekday = true
       }
     } else {
-      if (dayOfWeek == 2 || dayOfWeek == 3) {
+      if (dayOfWeek == Calendar.SATURDAY || dayOfWeek == Calendar.SUNDAY) {
         isWeekday = false
       } else {
         isWeekday = true
