@@ -35,7 +35,7 @@ object YhdCreateWorklog extends SparkEntry {
 
     if (args.length < 4) {
       logError("Required at least 4 args: userName, cookie, date, hours or TridentID")
-      System.exit(0)
+      System.exit(-1)
     }
 
     val userName: String = args(0)
@@ -137,22 +137,12 @@ object YhdCreateWorklog extends SparkEntry {
     var isWeekday = false
     val date = dateStr.split("-").map(_.toInt)
     val calendar = new GregorianCalendar(date(0), date(1) - 1, date(2))
-    val month = calendar.get(Calendar.MONTH)
-    val dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH)
     val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK)
     logWarning("dayOfWeek: " + dayOfWeek)
-    if (month == 10) {
-      if (dayOfMonth <= 7) {
-        isWeekday = false
-      } else if (dayOfMonth == 8 || dayOfMonth == 9) {
-        isWeekday = true
-      }
+    if (dayOfWeek == Calendar.SATURDAY || dayOfWeek == Calendar.SUNDAY) {
+      isWeekday = false
     } else {
-      if (dayOfWeek == Calendar.SATURDAY || dayOfWeek == Calendar.SUNDAY) {
-        isWeekday = false
-      } else {
-        isWeekday = true
-      }
+      isWeekday = true
     }
     isWeekday
   }
